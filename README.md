@@ -66,7 +66,9 @@ code .
 
 `code .` 를 입력하면 현재 폴더(`mcp-lab`)가 새 VS Code 창으로 바로 열립니다.
 
-**`code .` 가 안 될 때**: VS Code 메뉴 **File > Open Folder** 로 `mcp-lab` 폴더를 직접 선택해서 엽니다. (이미 열려 있는 폴더를 그대로 쓸 때도 이 방법을 쓰면 됩니다.)
+**`code .` 가 안 될 때**: VS Code 메뉴 **File > Open Folder** 로 `mcp-lab` 폴더를 직접 선택해서 엽니다.
+
+> 꼭 `mcp-lab` 폴더 자체를 열어야 합니다. 그 위 폴더를 열면 4단계 연결에서 Error가 납니다.
 
 > 참고: `uv init`은 `src/mcp_lab/__init__.py` 구조를 만듭니다. 서버 파일은 `src` 안이 아니라 **프로젝트 맨 바깥(`mcp-lab` 바로 아래)** 에 만드세요.
 
@@ -95,7 +97,7 @@ COURSES = {
         "room": "제5공학관 4층 Y5445",
         "presentation": "10/27(화) 오후 7:00 ~ 7:50, Y5445 (장소 추후 공지)",
     },
-        "객체지향프로그래밍1": {
+    "객체지향프로그래밍1": {
         "room": "제5공학관 4층 Y5401",
         "presentation": "10/26",
     },
@@ -165,8 +167,8 @@ mkdir .vscode
   "servers": {
     "campus-helper": {
       "type": "stdio",
-      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-      "args": ["${workspaceFolder}/server.py"]
+      "command": "uv",
+      "args": ["run", "python", "server.py"]
     }
   }
 }
@@ -183,6 +185,26 @@ Cannot start an MCP server before the session runtime has been created. Send a m
 ```
 
 Copilot 채팅 창에서 **아무 메시지(예: "안녕")를 한 번 보낸 뒤** 다시 **Start**를 누르면 `Running`이 됩니다.
+
+### 위 설정이 안 될 때 (uv를 못 찾는 경우)
+
+`uv` 명령어를 VS Code가 찾지 못하면 가상환경의 파이썬을 직접 지정합니다.
+
+Windows
+
+```json
+{
+  "servers": {
+    "campus-helper": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["${workspaceFolder}/server.py"]
+    }
+  }
+}
+```
+
+Mac / Linux: `command`를 `${workspaceFolder}/.venv/bin/python` 으로 바꿉니다.
 
 ## 6. AI에게 질문하기
 
@@ -219,6 +241,14 @@ Copilot 채팅 창에서 **아무 메시지(예: "안녕")를 한 번 보낸 뒤
 | 도구가 안 보이거나 파일을 못 찾음 | `server.py`가 `src/` 안에 있음 | 프로젝트 맨 바깥으로 이동 |
 | mcp.json에 Start가 안 보임 | 파일 미저장(탭의 ●) | Ctrl+S |
 | Start 후 Error, 출력은 비어 있음 | 채팅 세션이 아직 없음 | 채팅에 메시지를 먼저 보내고 다시 Start |
+| Start 후 Error, 로그에 `uv`를 못 찾는다는 내용 | VS Code가 uv 경로를 모름 | 5단계의 `.venv` 파이썬 경로 방식 사용 |
+| Start 후 Error, 파일을 못 찾음 | `mcp-lab`이 아닌 다른 폴더를 열어 둠 | `mcp-lab` 폴더 자체를 열기 |
+
+## 참고
+
+- MCP 공식 문서: https://modelcontextprotocol.io
+- VS Code MCP 서버 가이드: https://code.visualstudio.com/docs/agent-customization/mcp-servers
+- MCP Python SDK: https://github.com/modelcontextprotocol/python-sdk
 
 ## 참고
 
