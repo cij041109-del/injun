@@ -19,7 +19,7 @@
 1. MCP 서버는 파이썬 함수 몇 개 + `@mcp.tool()` 만으로 만들 수 있다.
 2. AI는 서버가 알려 준 도구 이름·설명·입력 형식만 보고 도구를 고르고 호출한다. 한 질문에 도구 여러 개도 연속으로 쓴다.
 3. 서버 단독 확인(Inspector)과 AI 연결 확인(VS Code)을 나눠서 보면 문제를 빨리 찾는다.
-4. 예시 데이터에 **내 시간표**를 넣으면, AI가 내 강의실과 발표 일정을 대신 찾아 준다.
+4. 예시 데이터에 **내 시간표**를 넣으면, AI가 내 강의실과 시험 일정을 대신 찾아 준다.
 5. AI가 접근하는 범위는 서버가 만든 도구로 제한되고, 실행 전에 사용자 승인을 거친다.
 
 ---
@@ -68,7 +68,7 @@ code .
 
 **`code .` 가 안 될 때**: VS Code 메뉴 **File > Open Folder** 로 `mcp-lab` 폴더를 직접 선택해서 엽니다.
 
-> 꼭 `mcp-lab` 폴더 자체를 열어야 합니다. 그 위 폴더를 열면 4단계 연결에서 Error가 납니다.
+> 꼭 `mcp-lab` 폴더 자체를 열어야 합니다. 그 위 폴더를 열면 5단계 연결에서 Error가 납니다.
 
 > 참고: `uv init`은 `src/mcp_lab/__init__.py` 구조를 만듭니다. 서버 파일은 `src` 안이 아니라 **프로젝트 맨 바깥(`mcp-lab` 바로 아래)** 에 만드세요.
 
@@ -76,7 +76,7 @@ code .
 
 `mcp-lab` 폴더 바로 아래에 `server.py` 파일을 새로 만들고 아래를 붙여 넣습니다.
 
-예시 데이터(`COURSES`)에 들어 있는 과목·강의실·발표 일정은 **작성자의 시간표**입니다. **각자 자기 시간표(과목명, 강의실, 시험·발표 일정 등)로 바꿔 넣으면 내 일정을 알려 주는 서버**가 됩니다.
+예시 데이터(`COURSES`)에 들어 있는 과목·강의실·시험 일정은 **작성자의 시간표**입니다. **각자 자기 시간표(과목명, 강의실, 시험 일정 등)로 바꿔 넣으면 내 일정을 알려 주는 서버**가 됩니다.
 
 ```python
 from mcp.server.mcpserver import MCPServer
@@ -87,27 +87,27 @@ mcp = MCPServer("campus-helper")
 COURSES = {
     "공개SW실무": {
         "room": "제5공학관 4층 Y5420",
-        "presentation": "10/19",
+        "exam": "시험 없음 (발표 10/19)",
     },
     "선형대수학개론": {
         "room": "함박관 5층 Y9503",
-        "presentation": "10/19(월) 오후 5:30 ~ 7:00, 함박관 Y9010",
+        "exam": "시험 10/19(월) 오후 5:30 ~ 7:00, 함박관 Y9010",
     },
     "웹프로그래밍": {
         "room": "제5공학관 4층 Y5445",
-        "presentation": "10/27(화) 오후 7:00 ~ 7:50, Y5445 (장소 추후 공지)",
+        "exam": "시험 10/27(화) 오후 7:00 ~ 7:50, Y5445 (장소 추후 공지)",
     },
     "객체지향프로그래밍1": {
         "room": "제5공학관 4층 Y5401",
-        "presentation": "10/26",
+        "exam": "시험 10/26",
     },
     "발표와토의": {
         "room": "참조예술관 5층 Y2511",
-        "presentation": "발표 일정 없음",
+        "exam": "시험 없음",
     },
     "채플": {
         "room": "60주년채플관 2층 Y22217",
-        "presentation": "발표 일정 없음",
+        "exam": "시험 없음",
     },
 }
 
@@ -126,10 +126,10 @@ def get_classroom(course: str) -> str:
 
 
 @mcp.tool()
-def get_presentation_schedule(course: str) -> str:
-    """Return the presentation date and place of a course."""
+def get_exam_schedule(course: str) -> str:
+    """Return the exam schedule (date, time, place) of a course."""
     info = COURSES.get(course.strip())
-    return info["presentation"] if info else "No matching course"
+    return info["exam"] if info else "No matching course"
 
 
 if __name__ == "__main__":
@@ -137,8 +137,6 @@ if __name__ == "__main__":
 ```
 
 핵심은 평범한 함수 위에 `@mcp.tool()` 한 줄을 붙이는 것입니다. 함수 이름, docstring(설명), 매개변수 타입이 AI에게 보이는 "사용 설명서"가 됩니다.
-
-> 시험 일정이 있는 과목이라면 `"exam": "12/14"` 같은 항목을 `COURSES`에 추가하고, `get_exam_schedule` 함수를 같은 방식으로 하나 더 만들면 됩니다.
 
 ## 4. Inspector로 서버 확인
 
@@ -149,8 +147,8 @@ uv run mcp dev server.py
 브라우저에서 MCP Inspector가 열립니다. (처음 실행할 때 Node 패키지를 내려받아 시간이 걸릴 수 있습니다.)
 
 1. **Connect** 클릭
-2. **Tools** 탭으로 이동(목록이 비어 있으면 List Tools 버튼 클릭) → 도구 3개(`list_courses`, `get_classroom`, `get_presentation_schedule`)가 보이면 성공
-3. `get_presentation_schedule`을 선택하고 `course`에 `공개SW실무` 입력 후 실행 → 결과 `10/19`
+2. **Tools** 탭으로 이동(목록이 비어 있으면 List Tools 버튼 클릭) → 도구 3개(`list_courses`, `get_classroom`, `get_exam_schedule`)가 보이면 성공
+3. `get_exam_schedule`을 선택하고 `course`에 `선형대수학개론` 입력 후 실행 → 결과 `시험 10/19(월) 오후 5:30 ~ 7:00, 함박관 Y9010`
 
 확인이 끝나면 터미널에서 `Ctrl + C`로 종료합니다.
 
@@ -212,18 +210,18 @@ Mac / Linux: `command`를 `${workspaceFolder}/.venv/bin/python` 으로 바꿉니
 2. 아래처럼 질문합니다. (본인 시간표의 과목명으로 바꿔도 됩니다.)
 
 ```
-공개SW실무 발표 일정이랑 강의실을 같이 알려줘.
+선형대수학개론 시험 일정이랑 강의실을 같이 알려줘.
 ```
 
 3. 도구 실행 확인 창이 뜨면 내용을 확인하고 **Allow in this Session**을 누릅니다.
-4. AI가 `get_presentation_schedule`, `get_classroom` 두 도구를 연속으로 호출하고 답변합니다.
+4. AI가 `get_exam_schedule`, `get_classroom` 두 도구를 연속으로 호출하고 답변합니다.
 
 다른 질문도 해 보세요.
 
 ```
 내 시간표에 있는 과목을 전부 알려줘.
-선형대수학개론 발표는 언제 어디서 해?
-웹프로그래밍 강의실이랑 발표 일정 알려줘.
+웹프로그래밍 시험은 언제 어디서 봐?
+공개SW실무는 시험 있어?
 ```
 
 호출 과정을 보려면 답변 위의 `Completed 2 steps` 항목을 펼쳐 보세요.
