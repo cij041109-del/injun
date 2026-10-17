@@ -87,7 +87,7 @@ mcp = MCPServer("campus-helper")
 COURSES = {
     "공개SW실무": {
         "room": "제5공학관 4층 Y5420",
-        "exam": "시험 없음 (발표 10/19)",
+        "exam": "중간 시험 없음 (발표 10/19)",
     },
     "선형대수학개론": {
         "room": "함박관 5층 Y9503",
